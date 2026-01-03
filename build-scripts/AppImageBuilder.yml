@@ -7,7 +7,7 @@ script:
   - mkdir -p AppDir/usr/src
   - mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
   # Copy the python application code into the AppDir
-  - cp -a ./src AppDir/usr/src -r
+  - cp -a ./src AppDir/usr -r
   - cp widget_logo.png AppDir/usr/share/icons/hicolor/256x256/apps -r
   - apt-get update && apt-get install -y --no-install-recommends squashfs-tools python3
   
@@ -20,7 +20,7 @@ AppDir:
     icon: widget_logo
     version: "1.0"
     exec: usr/bin/python3
-    exec_args: "$APPDIR/usr/src/keychron_widget.py"
+    exec_args: "$APPDIR/usr/src/keychron_widget.py $@"
 
   apt:
     arch: amd64
