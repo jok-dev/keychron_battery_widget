@@ -1,7 +1,7 @@
 name: Build AppImage
 
 run-name: ${{ github.actor }} is testing out building appimage
-on: [workflow_dispatch]
+on: [workflow_dispatch,push]
 
 jobs:
   build:
