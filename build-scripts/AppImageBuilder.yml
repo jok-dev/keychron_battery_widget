@@ -41,7 +41,6 @@ AppDir:
       - bash
       - coreutils      
       - libhidapi-hidraw0
-      - python3-hid
     exclude:
       - usr/share/man
       - usr/share/doc/*/README.*

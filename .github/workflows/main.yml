@@ -22,6 +22,9 @@ jobs:
       working-directory: ${{github.workspace}}
       run : python3 -m pip install --prefix=/usr --root=AppDir PyQt6
 
+    - name: install python PyQt6
+      working-directory: ${{github.workspace}}
+      run : python3 -m pip install --prefix=/usr --root=AppDir hid
 
     - name: Build AppImage
       uses: AppImageCrafters/build-appimage-action@master
