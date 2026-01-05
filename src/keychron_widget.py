@@ -42,15 +42,6 @@ class MainWindow(QSystemTrayIcon):
     def set_icons_scheme(self,scheme_color:Qt.ColorScheme):
         print(scheme_color)
         if scheme_color == Qt.ColorScheme.Light:
-            self.icon0 = QIcon(path_to_main + '/battery0White.png')
-            self.icon1 = QIcon(path_to_main + '/battery1White.png')
-            self.icon2 = QIcon(path_to_main + '/battery2White.png')
-            self.icon3 = QIcon(path_to_main + '/battery3White.png')
-            self.icon4 = QIcon(path_to_main + '/battery4White.png')
-            self.icon5 = QIcon(path_to_main + '/battery5White.png')
-            self.icon_wired = QIcon(path_to_main + '/usbiconWhite.png')   
-            self.charging = QIcon(path_to_main + '/charging_boltWhite.png')               
-        else:
             self.icon0 = QIcon(path_to_main + '/battery0.png')
             self.icon1 = QIcon(path_to_main + '/battery1.png')
             self.icon2 = QIcon(path_to_main + '/battery2.png')
@@ -58,8 +49,17 @@ class MainWindow(QSystemTrayIcon):
             self.icon4 = QIcon(path_to_main + '/battery4.png')
             self.icon5 = QIcon(path_to_main + '/battery5.png')
             self.icon_wired = QIcon(path_to_main + '/usbicon.png')
-            self.charging = QIcon(path_to_main + '/charging_bolt.png')     
-        
+            self.charging = QIcon(path_to_main + '/charging_bolt.png')    
+        else:
+            self.icon0 = QIcon(path_to_main + '/battery0White.png')
+            self.icon1 = QIcon(path_to_main + '/battery1White.png')
+            self.icon2 = QIcon(path_to_main + '/battery2White.png')
+            self.icon3 = QIcon(path_to_main + '/battery3White.png')
+            self.icon4 = QIcon(path_to_main + '/battery4White.png')
+            self.icon5 = QIcon(path_to_main + '/battery5White.png')
+            self.icon_wired = QIcon(path_to_main + '/usbiconWhite.png')   
+            self.charging = QIcon(path_to_main + '/charging_boltWhite.png')                 
+            
         self.update_status()
 
     def set_battery_icon(self):
