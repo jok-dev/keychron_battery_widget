@@ -1,50 +1,115 @@
-name: Build AppImage
+name: Build and Release
 
-run-name: ${{ github.actor }} is testing out building appimage
+run-name: ${{ github.actor }} is building Keychron Battery Widget
+
 on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  build-appimage:
+    name: Build Linux AppImage
     runs-on: ubuntu-22.04
-    
     steps:
-    - uses: actions/checkout@v2
-    # - name: Install Qt
-    #   uses: jurplel/install-qt-action@v4
-    #   with:
-    #     version: 6.8.3
+      - uses: actions/checkout@v4
 
-    - name: list
-      working-directory: ${{github.workspace}}
-      run : ls
+      - name: install python PyQt6
+        working-directory: ${{github.workspace}}
+        run: python3 -m pip install --prefix=/usr --root=AppDir PyQt6
 
-    - name: install python PyQt6
-      working-directory: ${{github.workspace}}
-      run : python3 -m pip install --prefix=/usr --root=AppDir PyQt6
+      - name: install python hid
+        working-directory: ${{github.workspace}}
+        run: python3 -m pip install --prefix=/usr --root=AppDir hid
 
-    - name: install python PyQt6
-      working-directory: ${{github.workspace}}
-      run : python3 -m pip install --prefix=/usr --root=AppDir hid
+      - name: Build AppImage
+        uses: AppImageCrafters/build-appimage-action@master
+        env:
+          UPDATE_INFO: gh-releases-zsync|cgspeck|brewtarget|latest|*x86_64.AppImage.zsync
+        with:
+          recipe: build-scripts/AppImageBuilder.yml
 
-    - name: Build AppImage
-      uses: AppImageCrafters/build-appimage-action@master
-      env:
-        UPDATE_INFO: gh-releases-zsync|cgspeck|brewtarget|latest|*x86_64.AppImage.zsync
-      with:
-        recipe: build-scripts/AppImageBuilder.yml     
-    
-    - uses: actions/upload-artifact@v4
-      with:
-        name: KeychronWidget
-        path: './*.AppImage*'
-    
-    - uses: xresloader/upload-to-github-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.LAUT_UPLOAD_TOKEN }}
-      with:
-        file: './*.AppImage*'
-        tags: true
-        draft: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KeychronWidget-AppImage
+          path: './*.AppImage*'
+
+  build-windows:
+    name: Build Windows installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller==6.11.1
+
+      - name: Build exe with PyInstaller
+        run: pyinstaller --noconfirm --clean build-scripts/keychron_widget.spec
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          # Strip a leading "v" from tags like v1.2.3 so Inno Setup gets "1.2.3".
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            raw="${GITHUB_REF#refs/tags/}"
+            echo "value=${raw#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=0.0.0-dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer with Inno Setup
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.version.outputs.value }} build-scripts\windows_installer.iss
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KeychronWidget-Windows
+          path: build-scripts/KeychronBatteryWidget-Setup-*.exe
+
+  release:
+    name: Publish GitHub release
+    needs: [build-appimage, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download AppImage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: KeychronWidget-AppImage
+          path: artifacts/appimage
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: KeychronWidget-Windows
+          path: artifacts/windows
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/appimage/*
+            artifacts/windows/*

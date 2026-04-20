@@ -8,7 +8,9 @@ from PyQt6.QtWidgets import (QApplication
                              )
 from PyQt6.QtGui import QAction,QIcon
 
-path_to_main = os.path.dirname(os.path.realpath(__file__))
+# When bundled by PyInstaller the image assets are unpacked next to the
+# executable in sys._MEIPASS; fall back to the script directory otherwise.
+path_to_main = getattr(sys, '_MEIPASS', os.path.dirname(os.path.realpath(__file__)))
 
 def get_path_to_remote_interface():
     devices = hid.enumerate(vid=0x3434, pid=0xd028)
